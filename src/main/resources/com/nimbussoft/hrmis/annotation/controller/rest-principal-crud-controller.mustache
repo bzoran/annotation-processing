@@ -1,0 +1,96 @@
+package {{packageName}};
+
+import com.nimbussoft.hrmis.config.customSecurity.JwtUser;
+import {{rootPackageName}}.dto.{{entityName}}Dto;
+import {{rootPackageName}}.dto.support.PageRequestByExample;
+import {{rootPackageName}}.dto.support.PageResponse;
+import {{rootPackageName}}.repository.{{entityName}}Repository;
+import {{rootPackageName}}.service.{{entityName}}DtoService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import com.nimbussoft.hrmis.dto.enums.RoleCode;
+
+import java.lang.reflect.InvocationTargetException;
+
+import javax.annotation.Generated;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Optional;
+
+import static com.nimbussoft.hrmis.service.util.SecurityHelpers.addInstitutionTo{{addInstitutionTo}};
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+
+@Generated(
+    value = "com.nimbussoft.hrmis.annotation.controller.HrmisRestController",
+    date = "{{now}}",
+    comments = "version: 1.0.0-SNAPSHOT"
+)
+public abstract class {{entityName}}ResourceAbstract {
+
+	protected final Logger log = LoggerFactory.getLogger({{entityName}}Resource.class);
+
+	protected final {{entityName}}DtoService {{entityVariable}}DtoService;
+
+	protected {{entityName}}ResourceAbstract({{entityName}}DtoService {{entityVariable}}DtoService) {
+		this.{{entityVariable}}DtoService = {{entityVariable}}DtoService;
+	}
+
+	protected ResponseEntity<{{entityName}}Dto> create({{entityName}}Dto {{entityVariable}}Dto, JwtUser jwtUser) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, URISyntaxException {
+		log.debug("Create {{entityName}}Dto : {}", {{entityVariable}}Dto);
+        addInstitutionTo{{addInstitutionTo}}(jwtUser, {{entityVariable}}Dto);
+		if ({{entityVariable}}Dto.isIdSet()) {
+			return ResponseEntity.badRequest().header("Failure", "Cannot create {{entityName}} with existing ID").body(null);
+		}
+		{{entityName}}Dto result = {{entityVariable}}DtoService.save({{entityVariable}}Dto);
+		return ResponseEntity.created(new URI("/api/{{entityVariable}}s/" + result.getId())).body(result);
+	}
+
+	/**
+	 * Find by id {{entityName}}.
+	 */
+	protected ResponseEntity<{{entityName}}Dto> findById(String id) {
+		log.debug("Find by id {{entityName}} : {}", id);
+		return Optional.ofNullable({{entityVariable}}DtoService.findOne(id)).map({{entityVariable}}Dto -> new ResponseEntity<>({{entityVariable}}Dto, HttpStatus.OK))
+				.orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+	}
+
+	/**
+	 * Update {{entityName}}.
+	 */
+	protected ResponseEntity<{{entityName}}Dto> update({{entityName}}Dto {{entityVariable}}Dto, JwtUser jwtUser) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, URISyntaxException {
+		log.debug("Update {{entityName}}Dto : {}", {{entityVariable}}Dto);
+		if (!{{entityVariable}}Dto.isIdSet()) {
+			return create({{entityVariable}}Dto, jwtUser);
+		}
+		{{entityName}}Dto result = {{entityVariable}}DtoService.save({{entityVariable}}Dto);
+		return ResponseEntity.ok().body(result);
+	}
+
+	/**
+	 * Find a Page of {{entityName}} using query by example.
+	 */
+	protected ResponseEntity<PageResponse<{{entityName}}Dto>> findAll(PageRequestByExample<{{entityName}}Dto> prbe, JwtUser jwtUser) {
+		if (jwtUser.getRoles().contains(RoleCode.HR_ACCESS_OWN.getCode())) {
+            addInstitutionTo{{addInstitutionTo}}(jwtUser, prbe.getExample());
+        }
+		PageResponse<{{entityName}}Dto> pageResponse = {{entityVariable}}DtoService.findAll(prbe);
+		return new ResponseEntity<>(pageResponse, new HttpHeaders(), HttpStatus.OK);
+	}
+
+	/**
+	 * Delete by id {{entityName}}.
+	 */
+	protected ResponseEntity<Void> delete(String id) {
+		log.debug("Delete by id {{entityName}} : {}", id);
+		try {
+		    {{entityVariable}}DtoService.deleteById(id);
+			return ResponseEntity.ok().build();
+		} catch (Exception x) {
+			return ResponseEntity.status(HttpStatus.CONFLICT).build();
+		}
+	}
+
+}
